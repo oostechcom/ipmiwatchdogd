@@ -1,0 +1,70 @@
+#!/bin/bash
+# S99zIPMIWATCHDOGD used to control the ipmiwatchdogd daemon
+#
+#the ipmiwatchdogd deamon location /usr/sbin/ipmiwatchdogd
+# 
+# =======================================================
+#
+# Wrote by Sam Lee  at Mar 2013 
+# if you have any question/comments please contact 
+# Sam.Lee@emerson.com 
+#
+# ======================================================
+
+DAEMON=/usr/sbin/ipmiwatchdogd
+
+RetrunValue=0
+
+#Check if the daemon is there.
+if [ -f $DAEMON ] 
+then 
+	echo "$DAEMON is here"
+else
+	echo "$DAEMON is not here"
+	exit 1
+fi
+
+#start the ipmiwatchdogd daemon
+start()
+	{
+    	echo "Starting from initial script ...."
+	$DAEMON
+	return $RetrunValue
+	}
+
+stop()
+	{
+	echo "Stoping the $DAEMON ..."
+	echo "Stop the watchdog timer gracefully .."
+	/usr/bin/ipmicmd -k "0f 00 06 24 00 00 00 00 00 00" smi 0 >/dev/null 2>&1
+	/usr/bin/ipmitool raw 0x06 0x24 0x00 0x00 0x00 0x00 0x00 0x00 >/dev/null 2>&1
+	kill -9 `ps -C ipmiwatchdogd` >/dev/null 2>&1
+	return $RetrunValue
+	}
+
+restart()
+	{
+	stop
+	sleep 1
+	start
+	return $RetrunValue
+	}
+
+
+# See how ipmiwatchdogd daemon called.
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    *)
+        echo " Usage: ipmiwatchdog start|stop|restart "
+        ;;
+esac
+exit $RetrunValue
